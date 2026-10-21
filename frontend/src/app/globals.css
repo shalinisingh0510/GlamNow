@@ -180,3 +180,34 @@ body {
 .gn-pulse {
   animation: gn-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
 }
+
+/* ─── Sheet and Dialog Animations ─── */
+@keyframes gn-slide-up {
+  from { transform: translateY(100%); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+@keyframes gn-scale-in {
+  from { transform: scale(0.95); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
+
+.gn-slide-up {
+  animation: gn-slide-up var(--gn-transition-base) cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.gn-scale-in {
+  animation: gn-scale-in var(--gn-transition-fast) cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .gn-skeleton,
+  .gn-fade-in,
+  .gn-pulse,
+  .gn-slide-up,
+  .gn-scale-in {
+    animation: none !important;
+    transition: none !important;
+  }
+}
+

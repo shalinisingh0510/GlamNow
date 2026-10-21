@@ -50,7 +50,7 @@ class Settings(BaseSettings):
 
     # ── Secrets ──────────────────────────────────────────────────
     secret_key: str = Field(
-        default="CHANGE-ME-IN-PRODUCTION",
+        default="CHANGE-ME-IN-PRODUCTION-MIN-32-CHARS-FOR-HMAC-SHA256",
         description="Used for signing tokens. Must be random in non-dev.",
     )
 
@@ -86,7 +86,7 @@ class Settings(BaseSettings):
     def _warn_default_secret(cls, v: str, info) -> str:  # noqa: ANN001
         import warnings
 
-        if v == "CHANGE-ME-IN-PRODUCTION":
+        if v.startswith("CHANGE-ME-IN-PRODUCTION"):
             warnings.warn(
                 "Using default secret key. Set GLAMNOW_SECRET_KEY in production.",
                 UserWarning,

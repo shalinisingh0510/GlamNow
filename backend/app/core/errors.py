@@ -54,10 +54,18 @@ class AppError(Exception):
 
 
 class NotFoundError(AppError):
-    def __init__(self, resource: str = "Resource", identifier: str | None = None) -> None:
-        msg = f"{resource} not found"
-        if identifier:
-            msg += f": {identifier}"
+    def __init__(
+        self,
+        resource: str = "Resource",
+        identifier: str | None = None,
+        message: str | None = None,
+    ) -> None:
+        if message:
+            msg = message
+        else:
+            msg = f"{resource} not found"
+            if identifier:
+                msg += f": {identifier}"
         super().__init__(status_code=404, code="NOT_FOUND", message=msg)
 
 

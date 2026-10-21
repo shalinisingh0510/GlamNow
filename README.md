@@ -52,12 +52,41 @@ GlamNow/
 
 ---
 
+### Docker Local Development (PostgreSQL 16 & Redis 7)
+
+```bash
+# Start local PostgreSQL and Redis containers
+docker compose -f compose.dev.yml up -d
+
+# Check service health
+docker compose -f compose.dev.yml ps
+```
+
+---
+
+### Database Migrations (Alembic)
+
+```bash
+cd backend
+
+# View current database revision
+uv run alembic current
+
+# Run migrations up to latest revision
+uv run alembic upgrade head
+
+# Generate a new migration revision
+uv run alembic revision --autogenerate -m "describe_migration"
+```
+
+---
+
 ### Running the Backend
 
 ```bash
 cd backend
 
-# Create virtualenv and install dependencies
+# Create virtualenv and install pinned dependencies
 uv sync
 
 # Run tests with coverage
@@ -69,6 +98,7 @@ uv run uvicorn app.main:app --reload --port 8000
 
 The OpenAPI documentation is accessible at `http://localhost:8000/docs`.  
 Health check endpoint: `http://localhost:8000/api/v1/health`.
+Readiness probe (verifies database connectivity): `http://localhost:8000/api/v1/readiness`.
 
 ---
 

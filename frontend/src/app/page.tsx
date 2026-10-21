@@ -6,84 +6,80 @@ import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-
-// Sample verified professionals data
-const FEATURED_PROS = [
-  {
-    id: "pro_1",
-    name: "Priya Sharma",
-    title: "Master Aesthetician & Hair Stylist",
-    rating: 4.94,
-    reviewsCount: 382,
-    experience: "7+ years exp",
-    etaMinutes: 18,
-    specialties: ["Hydra Facial", "Bridal Hair", "Keratin Spa"],
-    startingPrice: 599,
-    tier: "premium" as const,
-    avatar: "PS",
-    verified: true,
-  },
-  {
-    id: "pro_2",
-    name: "Ramesh Kumar",
-    title: "Men's Master Barber & Grooming Specialist",
-    rating: 4.88,
-    reviewsCount: 512,
-    experience: "9+ years exp",
-    etaMinutes: 24,
-    specialties: ["Fade Cuts", "Beard Sculpting", "Charcoal Detan"],
-    startingPrice: 349,
-    tier: "standard" as const,
-    avatar: "RK",
-    verified: true,
-  },
-  {
-    id: "pro_3",
-    name: "Ananya Deshmukh",
-    title: "Master Tailor & Draping Artisan",
-    rating: 4.97,
-    reviewsCount: 240,
-    experience: "12+ years exp",
-    etaMinutes: 30,
-    specialties: ["Saree Draping", "Designer Blouses", "Pico-Fall"],
-    startingPrice: 299,
-    tier: "premium" as const,
-    avatar: "AD",
-    verified: true,
-  },
-];
-
-// Service categories
-const CATEGORIES = [
-  { id: "beauty", name: "Salon for Women", count: "32 Services", icon: "✨" },
-  { id: "grooming", name: "Men's Grooming", count: "18 Services", icon: "✂️" },
-  { id: "tailoring", name: "Tailoring & Alterations", count: "14 Services", icon: "🧵", badge: "Express Delivery" },
-  { id: "massage", name: "Spa & Body Massage", count: "12 Services", icon: "🌿" },
-  { id: "saree", name: "Saree Draping & Ironing", count: "6 Services", icon: "🥻" },
-];
+import { Dialog } from "@/components/ui/dialog";
+import { BottomSheet } from "@/components/ui/bottom-sheet";
+import { PricingTierCard } from "@/components/ui/pricing-tier-card";
+import { ServiceCard } from "@/components/ui/service-card";
+import { ProfessionalCard } from "@/components/ui/professional-card";
+import { StatusIndicator } from "@/components/ui/status-indicator";
+import { EmptyState } from "@/components/ui/empty-state";
+import {
+  FIXTURE_CATEGORIES,
+  FIXTURE_SERVICES,
+  FIXTURE_PROFESSIONALS,
+  FIXTURE_TAILORING_SERVICES,
+  FIXTURE_SERVICEABLE_ZONES,
+  type ServiceItemFixture,
+} from "@/lib/fixtures";
 
 export default function HomePage() {
   const [selectedCategory, setSelectedCategory] = useState("beauty");
-  const [selectedTier, setSelectedTier] = useState<"all" | "basic" | "standard" | "premium">("all");
+  const [selectedTierFilter, setSelectedTierFilter] = useState<"all" | "basic" | "standard" | "premium">("all");
   const [pincodeInput, setPincodeInput] = useState("560038");
-  const [serviceableStatus, setServiceableStatus] = useState<string | null>("Available • Express 15–30 min service active");
+  const [serviceableNotice, setServiceableNotice] = useState<string | null>(
+    "Verified: Indiranagar Zone (560038) has 14 professionals available for 15–25 min dispatch."
+  );
   const [selectedProId, setSelectedProId] = useState<string | null>("pro_1");
   const [tailoringStep, setTailoringStep] = useState(1);
 
+  // Modal and Sheet states for testing interactions
+  const [tierModalService, setTierModalService] = useState<ServiceItemFixture | null>(null);
+  const [mobileCartSheetOpen, setMobileCartSheetOpen] = useState(false);
+  const [cartCount, setCartCount] = useState(2);
+  const [bagNotice, setBagNotice] = useState<string | null>(null);
+
   const handleCheckServiceability = (e: React.FormEvent) => {
     e.preventDefault();
-    if (pincodeInput.length === 6) {
-      setServiceableStatus(`Verified: Zone 4 (${pincodeInput}) has 14 professionals available right now.`);
+    const zone = FIXTURE_SERVICEABLE_ZONES.find((z) => z.pincode === pincodeInput.trim());
+    if (zone) {
+      setServiceableNotice(
+        `Verified: ${zone.area} (${zone.pincode}) has ${zone.activePros} professionals available for ${zone.etaMin}–${zone.etaMax} min dispatch.`
+      );
     } else {
-      setServiceableStatus("Please enter a valid 6-digit Indian PIN code.");
+      setServiceableNotice(`Zone ${pincodeInput} is pending expansion. Select Indiranagar (560038) or Koramangala (560034).`);
     }
   };
 
+  const handleAddToCart = (serviceName: string) => {
+    setCartCount((prev) => prev + 1);
+    setBagNotice(`Added "${serviceName}" to your service bag.`);
+    setTimeout(() => setBagNotice(null), 3000);
+  };
+
+  // Filter services by category
+  const activeServices = FIXTURE_SERVICES.filter(
+    (s) => s.categoryId === selectedCategory || selectedCategory === "all"
+  );
+
   return (
     <div className="flex flex-col min-h-screen">
+      {/* Dynamic Toast / Bag Notification */}
+      {bagNotice && (
+        <div className="fixed bottom-6 right-6 z-50 p-4 rounded-gn-lg bg-gn-text-primary text-gn-bg-primary shadow-gn-xl gn-slide-up flex items-center gap-3">
+          <span className="text-emerald-400 font-bold">✓</span>
+          <span className="text-sm font-medium">{bagNotice}</span>
+          <button
+            onClick={() => setMobileCartSheetOpen(true)}
+            className="text-xs text-gn-accent-secondary font-bold underline ml-2 cursor-pointer"
+          >
+            View Bag ({cartCount})
+          </button>
+        </div>
+      )}
+
       {/* ─── Hero Section ─── */}
       <section className="relative overflow-hidden bg-gradient-to-b from-gn-bg-secondary via-gn-bg-primary to-gn-bg-primary pt-12 pb-20 border-b border-gn-border-default">
-        {/* Subtle decorative circles */}
+        {/* Ambient Blur Accents */}
         <div className="absolute top-0 right-1/4 -mt-20 w-96 h-96 bg-gn-accent-primary-subtle rounded-full blur-3xl opacity-50 pointer-events-none" />
         <div className="absolute bottom-0 left-1/3 -mb-20 w-80 h-80 bg-gn-accent-secondary-subtle rounded-full blur-3xl opacity-50 pointer-events-none" />
 
@@ -127,10 +123,10 @@ export default function HomePage() {
                 </Button>
               </form>
 
-              {serviceableStatus && (
+              {serviceableNotice && (
                 <p className="text-xs text-gn-success font-medium flex items-center justify-center lg:justify-start gap-1.5">
                   <span className="h-2 w-2 rounded-full bg-emerald-500 inline-block" />
-                  {serviceableStatus}
+                  {serviceableNotice}
                 </p>
               )}
 
@@ -151,16 +147,11 @@ export default function HomePage() {
               </div>
             </div>
 
-            {/* Right Column: Dynamic Preview Card */}
+            {/* Right Column: Dynamic Live Preview Card */}
             <div className="lg:col-span-5">
               <Card className="p-6 bg-gn-bg-card border-gn-border-strong shadow-gn-lg relative overflow-hidden">
                 <div className="flex items-center justify-between pb-4 border-b border-gn-border-default">
-                  <div className="flex items-center gap-2">
-                    <span className="h-3 w-3 rounded-full bg-emerald-500 gn-pulse" />
-                    <span className="text-xs font-bold uppercase tracking-wider text-gn-text-secondary">
-                      Active Live Matching
-                    </span>
-                  </div>
+                  <StatusIndicator status="dispatched" pulse />
                   <Badge variant="primary">Instant Booking</Badge>
                 </div>
 
@@ -205,10 +196,10 @@ export default function HomePage() {
       </section>
 
       {/* ─── Categories Navigation Bar ─── */}
-      <section className="bg-gn-bg-card border-b border-gn-border-default py-6">
+      <section className="bg-gn-bg-card border-b border-gn-border-default py-6 sticky top-16 sm:top-20 z-30 shadow-xs">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center gap-3 overflow-x-auto pb-2 scrollbar-none">
-            {CATEGORIES.map((cat) => (
+            {FIXTURE_CATEGORIES.map((cat) => (
               <button
                 key={cat.id}
                 onClick={() => setSelectedCategory(cat.id)}
@@ -235,7 +226,54 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* ─── Service Tier Comparison (Basic, Standard, Premium) ─── */}
+      {/* ─── Service Catalog Grid with ServiceCard Component ─── */}
+      <section className="py-14 bg-gn-bg-secondary/30">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-between mb-8">
+            <div>
+              <h3 className="text-2xl font-bold font-serif text-gn-text-primary">Featured Services</h3>
+              <p className="text-xs sm:text-sm text-gn-text-secondary mt-0.5">
+                Every service offers tiered formulations and sanitized single-use kits.
+              </p>
+            </div>
+            <button
+              onClick={() => setMobileCartSheetOpen(true)}
+              className="md:hidden text-xs font-semibold text-gn-accent-primary flex items-center gap-1 cursor-pointer"
+            >
+              <span>View Bag ({cartCount})</span>
+              <span>→</span>
+            </button>
+          </div>
+
+          {activeServices.length > 0 ? (
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              {activeServices.map((service) => (
+                <ServiceCard
+                  key={service.id}
+                  id={service.id}
+                  category={service.categoryName}
+                  name={service.name}
+                  description={service.description}
+                  durationMinutes={service.durationMinutes}
+                  startingPricePaise={service.startingPricePaise}
+                  icon={service.icon}
+                  onSelectTier={() => setTierModalService(service)}
+                  onQuickBook={() => handleAddToCart(service.name)}
+                />
+              ))}
+            </div>
+          ) : (
+            <EmptyState
+              title="No services found in this category"
+              description="We are constantly expanding our service catalog in your location."
+              actionLabel="Reset Category Filter"
+              onAction={() => setSelectedCategory("beauty")}
+            />
+          )}
+        </div>
+      </section>
+
+      {/* ─── Multi-Tier Service Comparison (Basic, Standard, Premium) ─── */}
       <section id="services" className="py-16 bg-gn-bg-primary">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center max-w-3xl mx-auto mb-12 space-y-3">
@@ -251,9 +289,9 @@ export default function HomePage() {
               {(["all", "basic", "standard", "premium"] as const).map((t) => (
                 <button
                   key={t}
-                  onClick={() => setSelectedTier(t)}
+                  onClick={() => setSelectedTierFilter(t)}
                   className={`px-4 py-1.5 text-xs font-semibold rounded-gn-md capitalize transition-all cursor-pointer ${
-                    selectedTier === t
+                    selectedTierFilter === t
                       ? "bg-gn-bg-card text-gn-text-primary shadow-gn-sm"
                       : "text-gn-text-tertiary hover:text-gn-text-primary"
                   }`}
@@ -265,114 +303,65 @@ export default function HomePage() {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {/* Basic Tier Card */}
-            {(selectedTier === "all" || selectedTier === "basic") && (
-              <Card hover className="flex flex-col border-gn-border-default">
-                <CardHeader>
-                  <div className="flex items-center justify-between">
-                    <Badge variant="basic">Basic Tier</Badge>
-                    <span className="text-xs text-gn-text-muted">Swift &amp; Essential</span>
-                  </div>
-                  <CardTitle className="pt-2">Essential Care</CardTitle>
-                  <CardDescription>
-                    Ideal for routine grooming, quick touch-ups, and budget-friendly speed.
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="flex-1 space-y-4">
-                  <div className="flex items-baseline gap-1">
-                    <span className="text-3xl font-bold font-serif text-gn-text-primary">₹399</span>
-                    <span className="text-xs text-gn-text-tertiary">/ starting price</span>
-                  </div>
-                  <ul className="space-y-2 text-xs sm:text-sm text-gn-text-secondary">
-                    <li className="flex items-center gap-2">✓ Standard branded consumables</li>
-                    <li className="flex items-center gap-2">✓ Sanitized single-use tool pouch</li>
-                    <li className="flex items-center gap-2">✓ Verified professional (1+ yr exp)</li>
-                    <li className="flex items-center gap-2">✓ 20–30 min average duration</li>
-                  </ul>
-                </CardContent>
-                <CardFooter>
-                  <Button variant="ghost" className="w-full border border-gn-border-default hover:bg-gn-bg-secondary">
-                    Select Basic Tier
-                  </Button>
-                </CardFooter>
-              </Card>
+            {(selectedTierFilter === "all" || selectedTierFilter === "basic") && (
+              <PricingTierCard
+                tier="basic"
+                title="Essential Care"
+                description="Ideal for routine grooming, quick touch-ups, and budget-friendly speed."
+                pricePaise={39900}
+                durationMinutes={30}
+                brands="Streax, VLCC & Garnier Professional"
+                inclusions={[
+                  "Standard branded consumables",
+                  "Sanitized single-use tool pouch",
+                  "Verified professional (1+ yr exp)",
+                  "20–30 min average duration",
+                ]}
+                onSelect={() => handleAddToCart("Basic Essential Care")}
+              />
             )}
 
-            {/* Standard Tier Card */}
-            {(selectedTier === "all" || selectedTier === "standard") && (
-              <Card hover className="flex flex-col border-gn-accent-primary relative shadow-gn-md bg-gn-bg-card ring-1 ring-gn-accent-primary/20">
-                <div className="absolute -top-3 left-1/2 -translate-x-1/2">
-                  <span className="bg-gn-accent-primary text-white text-[11px] font-bold px-3 py-1 rounded-full uppercase tracking-wider shadow-xs">
-                    Most Popular
-                  </span>
-                </div>
-                <CardHeader className="pt-8">
-                  <div className="flex items-center justify-between">
-                    <Badge variant="standard">Standard Tier</Badge>
-                    <span className="text-xs text-amber-700 font-semibold">Recommended</span>
-                  </div>
-                  <CardTitle className="pt-2">Signature Experience</CardTitle>
-                  <CardDescription>
-                    Premium branded formulations, shoulder massage relaxer, and senior specialists.
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="flex-1 space-y-4">
-                  <div className="flex items-baseline gap-1">
-                    <span className="text-3xl font-bold font-serif text-gn-text-primary">₹799</span>
-                    <span className="text-xs text-gn-text-tertiary">/ starting price</span>
-                  </div>
-                  <ul className="space-y-2 text-xs sm:text-sm text-gn-text-secondary">
-                    <li className="flex items-center gap-2">✓ Top-tier professional brands (O3+, Cheryl&apos;s)</li>
-                    <li className="flex items-center gap-2">✓ 10-minute complimentary head &amp; shoulder relaxer</li>
-                    <li className="flex items-center gap-2">✓ Senior aesthetician (3+ yrs exp, 4.8+ rating)</li>
-                    <li className="flex items-center gap-2">✓ Complete disposable cleanup sheet</li>
-                  </ul>
-                </CardContent>
-                <CardFooter>
-                  <Button variant="primary" className="w-full">
-                    Select Standard Tier
-                  </Button>
-                </CardFooter>
-              </Card>
+            {(selectedTierFilter === "all" || selectedTierFilter === "standard") && (
+              <PricingTierCard
+                tier="standard"
+                title="Signature Experience"
+                description="Premium branded formulations, shoulder massage relaxer, and senior specialists."
+                pricePaise={79900}
+                durationMinutes={50}
+                brands="O3+, Cheryl's Cosmeceuticals & L'Oréal Serie Expert"
+                isPopular
+                inclusions={[
+                  "Top-tier professional brands (O3+, Cheryl's)",
+                  "10-minute complimentary head & shoulder relaxer",
+                  "Senior aesthetician (3+ yrs exp, 4.8+ rating)",
+                  "Complete disposable cleanup sheet",
+                ]}
+                onSelect={() => handleAddToCart("Standard Signature Care")}
+              />
             )}
 
-            {/* Premium Tier Card */}
-            {(selectedTier === "all" || selectedTier === "premium") && (
-              <Card hover className="flex flex-col border-purple-300 bg-gradient-to-b from-purple-50/50 to-gn-bg-card">
-                <CardHeader>
-                  <div className="flex items-center justify-between">
-                    <Badge variant="premium">Premium Tier</Badge>
-                    <span className="text-xs text-purple-900 font-semibold">Luxury Salon</span>
-                  </div>
-                  <CardTitle className="pt-2">Royal Indulgence</CardTitle>
-                  <CardDescription>
-                    Imported dermatological products, master stylists, aromatherapy &amp; full relaxation ritual.
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="flex-1 space-y-4">
-                  <div className="flex items-baseline gap-1">
-                    <span className="text-3xl font-bold font-serif text-gn-text-primary">₹1,499</span>
-                    <span className="text-xs text-gn-text-tertiary">/ starting price</span>
-                  </div>
-                  <ul className="space-y-2 text-xs sm:text-sm text-gn-text-secondary">
-                    <li className="flex items-center gap-2">✓ Luxury salon imports (Kérastase, Dermalogica)</li>
-                    <li className="flex items-center gap-2">✓ Master artist (7+ yrs exp, celebrity portfolio)</li>
-                    <li className="flex items-center gap-2">✓ Essential oils &amp; sensory ambient setup</li>
-                    <li className="flex items-center gap-2">✓ Unhurried, dedicated bespoke session</li>
-                  </ul>
-                </CardContent>
-                <CardFooter>
-                  <Button variant="secondary" className="w-full">
-                    Select Premium Tier
-                  </Button>
-                </CardFooter>
-              </Card>
+            {(selectedTierFilter === "all" || selectedTierFilter === "premium") && (
+              <PricingTierCard
+                tier="premium"
+                title="Royal Indulgence"
+                description="Imported dermatological products, master stylists, aromatherapy & full relaxation ritual."
+                pricePaise={149900}
+                durationMinutes={75}
+                brands="Kérastase Paris, Dermalogica & Truefitt & Hill"
+                inclusions={[
+                  "Luxury salon imports (Kérastase, Dermalogica)",
+                  "Master artist (7+ yrs exp, celebrity portfolio)",
+                  "Essential oils & sensory ambient setup",
+                  "Unhurried, dedicated bespoke session",
+                ]}
+                onSelect={() => handleAddToCart("Premium Royal Indulgence")}
+              />
             )}
           </div>
         </div>
       </section>
 
-      {/* ─── Choose a Specific Professional ─── */}
+      {/* ─── Choose a Specific Professional with ProfessionalCard Component ─── */}
       <section id="professionals" className="py-16 bg-gn-bg-secondary/40 border-y border-gn-border-default">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex flex-col md:flex-row items-start md:items-end justify-between mb-10 gap-4">
@@ -382,73 +371,32 @@ export default function HomePage() {
                 Select by rating, portfolio &amp; live arrival estimate.
               </h2>
               <p className="text-sm text-gn-text-secondary mt-1 max-w-xl">
-                Compare verified professionals nearby. View their authentic customer ratings, completed orders count, and immediate dispatch readiness.
+                Compare verified professionals nearby. View authentic customer ratings, completed orders count, and immediate dispatch readiness.
               </p>
             </div>
-            <Link href="#all-pros" className="text-xs font-semibold text-gn-accent-primary hover:underline shrink-0">
-              View All 42 Pros in Bengaluru →
-            </Link>
+            <span className="text-xs font-semibold text-gn-accent-primary">
+              Showing active pros in Bengaluru
+            </span>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {FEATURED_PROS.map((pro) => (
-              <Card
+            {FIXTURE_PROFESSIONALS.slice(0, 3).map((pro) => (
+              <ProfessionalCard
                 key={pro.id}
-                hover
-                onClick={() => setSelectedProId(pro.id)}
-                className={`cursor-pointer transition-all ${
-                  selectedProId === pro.id ? "ring-2 ring-gn-accent-primary shadow-gn-md border-transparent" : ""
-                }`}
-              >
-                <CardHeader className="pb-3">
-                  <div className="flex items-start justify-between">
-                    <div className="flex items-center gap-3">
-                      <div className="h-12 w-12 rounded-full bg-gn-accent-primary-subtle text-gn-accent-primary font-serif font-bold text-lg flex items-center justify-center">
-                        {pro.avatar}
-                      </div>
-                      <div>
-                        <div className="flex items-center gap-1.5">
-                          <h4 className="font-semibold text-gn-text-primary text-base">{pro.name}</h4>
-                          {pro.verified && (
-                            <span className="text-gn-accent-primary text-xs" title="Verified Professional">
-                              ✓
-                            </span>
-                          )}
-                        </div>
-                        <p className="text-xs text-gn-text-tertiary">{pro.title}</p>
-                      </div>
-                    </div>
-                  </div>
-                </CardHeader>
-                <CardContent className="space-y-3 pb-4">
-                  <div className="flex items-center justify-between text-xs py-2 px-3 rounded-gn-sm bg-gn-bg-secondary">
-                    <span className="font-bold text-amber-700">★ {pro.rating} ({pro.reviewsCount})</span>
-                    <span className="text-gn-text-secondary">{pro.experience}</span>
-                    <span className="font-semibold text-emerald-700">⚡ {pro.etaMinutes} mins ETA</span>
-                  </div>
-
-                  <div className="flex flex-wrap gap-1.5">
-                    {pro.specialties.map((s) => (
-                      <span key={s} className="text-[11px] px-2 py-0.5 rounded-full bg-gn-bg-tertiary/70 text-gn-text-secondary font-medium">
-                        {s}
-                      </span>
-                    ))}
-                  </div>
-                </CardContent>
-                <CardFooter className="pt-2 border-t border-gn-border-default/60 flex items-center justify-between">
-                  <div>
-                    <span className="text-[10px] text-gn-text-tertiary uppercase tracking-wide block">Starting at</span>
-                    <span className="text-base font-bold text-gn-text-primary font-serif">₹{pro.startingPrice}</span>
-                  </div>
-                  <Button
-                    variant={selectedProId === pro.id ? "primary" : "ghost"}
-                    size="sm"
-                    className={selectedProId === pro.id ? "" : "border border-gn-border-default"}
-                  >
-                    {selectedProId === pro.id ? "Selected ✓" : "Select Pro"}
-                  </Button>
-                </CardFooter>
-              </Card>
+                id={pro.id}
+                name={pro.name}
+                title={pro.title}
+                experienceYears={pro.experienceYears}
+                ratingScore={pro.ratingScore}
+                reviewCount={pro.reviewCount}
+                etaMinutes={pro.etaMinutes}
+                specialties={pro.specialties}
+                startingPricePaise={pro.startingPricePaise}
+                avatarText={pro.avatarText}
+                isVerified={pro.isVerified}
+                isSelected={selectedProId === pro.id}
+                onSelect={() => setSelectedProId(pro.id)}
+              />
             ))}
           </div>
         </div>
@@ -472,7 +420,7 @@ export default function HomePage() {
             {[
               { num: 1, title: "1. Select Garment", desc: "Saree pico-fall, blouse, kurti, hemming, or suit alteration." },
               { num: 2, title: "2. Measurement Mode", desc: "Master tailor home visit or provide a sample fitting garment." },
-              { num: 3, title: "3. Doorstep Fabric Pickup", desc: "Our rider collects your material &amp; sample in a sealed pouch." },
+              { num: 3, title: "3. Doorstep Fabric Pickup", desc: "Our rider collects your material & sample in a sealed pouch." },
               { num: 4, title: "4. Delivered & Fitted", desc: "Crafted by master tailors and delivered back with trial guarantee." },
             ].map((step) => (
               <div
@@ -497,76 +445,40 @@ export default function HomePage() {
             ))}
           </div>
 
-          {/* Interactive tailoring catalog sample */}
+          {/* Interactive tailoring catalog items */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <Card hover className="bg-gn-bg-card">
-              <CardHeader>
-                <div className="flex justify-between items-center">
-                  <Badge variant="outline">Saree Care</Badge>
-                  <span className="text-xs font-semibold text-emerald-600">24-48h Delivery</span>
-                </div>
-                <CardTitle className="pt-2">Pico-Fall &amp; Saree Rolling</CardTitle>
-                <CardDescription>
-                  Premium cotton fall stitching with interlocking pico border and steam press.
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-2 text-sm text-gn-text-secondary">
-                <p className="text-2xl font-bold font-serif text-gn-text-primary">₹299</p>
-                <p className="text-xs text-gn-text-tertiary">• Doorstep fabric pickup &amp; return included</p>
-                <p className="text-xs text-gn-text-tertiary">• Color-matched fall and high-tensile thread</p>
-              </CardContent>
-              <CardFooter>
-                <Button variant="primary" size="sm" className="w-full">
-                  Book Pico-Fall Service
-                </Button>
-              </CardFooter>
-            </Card>
-
-            <Card hover className="bg-gn-bg-card">
-              <CardHeader>
-                <div className="flex justify-between items-center">
-                  <Badge variant="outline">Bespoke Stitching</Badge>
-                  <span className="text-xs font-semibold text-gn-accent-primary">Master Tailor</span>
-                </div>
-                <CardTitle className="pt-2">Designer Blouse Stitching</CardTitle>
-                <CardDescription>
-                  Padded / non-padded blouse with custom neckline, latkan detailing &amp; perfect darts.
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-2 text-sm text-gn-text-secondary">
-                <p className="text-2xl font-bold font-serif text-gn-text-primary">₹699</p>
-                <p className="text-xs text-gn-text-tertiary">• Home measurement visit or sample garment pickup</p>
-                <p className="text-xs text-gn-text-tertiary">• Free trial &amp; alteration adjustment guarantee</p>
-              </CardContent>
-              <CardFooter>
-                <Button variant="primary" size="sm" className="w-full">
-                  Schedule Stitching
-                </Button>
-              </CardFooter>
-            </Card>
-
-            <Card hover className="bg-gn-bg-card">
-              <CardHeader>
-                <div className="flex justify-between items-center">
-                  <Badge variant="outline">Alterations</Badge>
-                  <span className="text-xs font-semibold text-amber-700">Express Alter</span>
-                </div>
-                <CardTitle className="pt-2">Trouser, Kurti &amp; Suit Alteration</CardTitle>
-                <CardDescription>
-                  Waist adjustment, length shortening, taper fit, sleeve reduction &amp; zip repair.
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-2 text-sm text-gn-text-secondary">
-                <p className="text-2xl font-bold font-serif text-gn-text-primary">₹199</p>
-                <p className="text-xs text-gn-text-tertiary">• Doorstep pin-up measurement by tailor</p>
-                <p className="text-xs text-gn-text-tertiary">• Finished within 48 hours</p>
-              </CardContent>
-              <CardFooter>
-                <Button variant="primary" size="sm" className="w-full">
-                  Book Alteration
-                </Button>
-              </CardFooter>
-            </Card>
+            {FIXTURE_TAILORING_SERVICES.map((t) => (
+              <Card key={t.id} hover className="bg-gn-bg-card">
+                <CardHeader>
+                  <div className="flex justify-between items-center">
+                    <Badge variant="outline">{t.category.replace("_", " ")}</Badge>
+                    <span className="text-xs font-semibold text-emerald-600">{t.estimatedHours}h Turnaround</span>
+                  </div>
+                  <CardTitle className="pt-2">{t.title}</CardTitle>
+                  <CardDescription>{t.description}</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-2 text-sm text-gn-text-secondary">
+                  <p className="text-2xl font-bold font-serif text-gn-text-primary">
+                    ₹{Math.round(t.pricePaise / 100)}
+                  </p>
+                  <ul className="space-y-1 text-xs text-gn-text-tertiary pt-1">
+                    {t.inclusions.map((inc, i) => (
+                      <li key={i}>• {inc}</li>
+                    ))}
+                  </ul>
+                </CardContent>
+                <CardFooter>
+                  <Button
+                    variant="primary"
+                    size="sm"
+                    className="w-full"
+                    onClick={() => handleAddToCart(t.title)}
+                  >
+                    Book Service
+                  </Button>
+                </CardFooter>
+              </Card>
+            ))}
           </div>
         </div>
       </section>
@@ -606,6 +518,95 @@ export default function HomePage() {
           </div>
         </div>
       </section>
+
+      {/* ─── Tier Detail Dialog (Triggered from ServiceCard) ─── */}
+      {tierModalService && (
+        <Dialog
+          open={Boolean(tierModalService)}
+          onClose={() => setTierModalService(null)}
+          title={`Tier Options for ${tierModalService.name}`}
+          description="Compare product formulations, duration, and inclusions."
+          className="max-w-2xl"
+        >
+          <div className="space-y-4">
+            {tierModalService.tiers.map((t) => (
+              <div
+                key={t.tier}
+                className="p-4 rounded-gn-lg border border-gn-border-default bg-gn-bg-secondary/40 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4"
+              >
+                <div>
+                  <div className="flex items-center gap-2">
+                    <Badge variant={t.tier}>{t.tier.toUpperCase()}</Badge>
+                    <h4 className="font-bold text-sm text-gn-text-primary">{t.title}</h4>
+                    <span className="text-xs text-gn-text-tertiary">~{t.durationMinutes}m</span>
+                  </div>
+                  <p className="text-xs text-gn-text-secondary mt-1">{t.description}</p>
+                  <p className="text-[11px] text-gn-text-muted mt-1 font-medium">Brands: {t.brands}</p>
+                </div>
+                <div className="shrink-0 flex items-center gap-3">
+                  <span className="font-serif font-bold text-lg text-gn-text-primary">
+                    ₹{Math.round(t.pricePaise / 100)}
+                  </span>
+                  <Button
+                    variant="primary"
+                    size="sm"
+                    onClick={() => {
+                      handleAddToCart(`${tierModalService.name} (${t.title})`);
+                      setTierModalService(null);
+                    }}
+                  >
+                    Select
+                  </Button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </Dialog>
+      )}
+
+      {/* ─── Mobile Cart / Service Bag BottomSheet ─── */}
+      <BottomSheet
+        open={mobileCartSheetOpen}
+        onClose={() => setMobileCartSheetOpen(false)}
+        title="Your Service Bag"
+        description="Review items before scheduling or instant booking."
+        footer={
+          <div className="space-y-3">
+            <div className="flex justify-between items-center text-sm font-semibold">
+              <span>Estimated Total:</span>
+              <span className="font-serif text-lg text-gn-accent-primary">₹1,298</span>
+            </div>
+            <Button
+              variant="primary"
+              size="lg"
+              className="w-full"
+              onClick={() => {
+                alert("Proceeding to checkout with idempotent hold.");
+                setMobileCartSheetOpen(false);
+              }}
+            >
+              Proceed to Booking Hold
+            </Button>
+          </div>
+        }
+      >
+        <div className="space-y-3">
+          <div className="p-3 rounded-gn-md border border-gn-border-default flex justify-between items-center">
+            <div>
+              <p className="font-semibold text-sm">Glow Radiance Facial (O3+)</p>
+              <p className="text-xs text-gn-text-tertiary">Standard Tier • 55 mins</p>
+            </div>
+            <span className="font-serif font-bold text-sm">₹999</span>
+          </div>
+          <div className="p-3 rounded-gn-md border border-gn-border-default flex justify-between items-center">
+            <div>
+              <p className="font-semibold text-sm">Pico-Fall &amp; Saree Rolling</p>
+              <p className="text-xs text-gn-text-tertiary">Doorstep Pickup included</p>
+            </div>
+            <span className="font-serif font-bold text-sm">₹299</span>
+          </div>
+        </div>
+      </BottomSheet>
     </div>
   );
 }
