@@ -1,0 +1,182 @@
+@import "tailwindcss";
+
+/* ─── GlamNow Design Tokens ─── */
+:root {
+  /* Warm neutral backgrounds */
+  --gn-bg-primary: #FAF7F5;
+  --gn-bg-secondary: #F5F0EC;
+  --gn-bg-tertiary: #EDE6DF;
+  --gn-bg-card: #FFFFFF;
+  --gn-bg-elevated: #FFFFFF;
+
+  /* Deep plum typography */
+  --gn-text-primary: #2D1B33;
+  --gn-text-secondary: #5C4362;
+  --gn-text-tertiary: #8A7490;
+  --gn-text-muted: #B3A2BA;
+  --gn-text-inverse: #FAF7F5;
+
+  /* Rose accents */
+  --gn-accent-primary: #C85A7C;
+  --gn-accent-primary-hover: #B84D6D;
+  --gn-accent-primary-subtle: #F5E0E7;
+  --gn-accent-secondary: #D4A373;
+  --gn-accent-secondary-hover: #C49363;
+  --gn-accent-secondary-subtle: #F5EADD;
+
+  /* Semantic colours */
+  --gn-success: #4A7C59;
+  --gn-success-subtle: #E3F0E7;
+  --gn-warning: #C4873B;
+  --gn-warning-subtle: #FDF0E0;
+  --gn-error: #B8434F;
+  --gn-error-subtle: #FBEAEC;
+  --gn-info: #4A6FA5;
+  --gn-info-subtle: #E5EDF7;
+
+  /* Borders */
+  --gn-border-default: #E8DFD8;
+  --gn-border-strong: #D1C4BA;
+  --gn-border-focus: #C85A7C;
+
+  /* Shadows */
+  --gn-shadow-sm: 0 1px 2px 0 rgba(45, 27, 51, 0.05);
+  --gn-shadow-md: 0 4px 6px -1px rgba(45, 27, 51, 0.07), 0 2px 4px -2px rgba(45, 27, 51, 0.05);
+  --gn-shadow-lg: 0 10px 15px -3px rgba(45, 27, 51, 0.08), 0 4px 6px -4px rgba(45, 27, 51, 0.04);
+  --gn-shadow-xl: 0 20px 25px -5px rgba(45, 27, 51, 0.10), 0 8px 10px -6px rgba(45, 27, 51, 0.04);
+
+  /* Radii */
+  --gn-radius-sm: 6px;
+  --gn-radius-md: 10px;
+  --gn-radius-lg: 16px;
+  --gn-radius-xl: 24px;
+  --gn-radius-full: 9999px;
+
+  /* Transitions */
+  --gn-transition-fast: 150ms cubic-bezier(0.4, 0, 0.2, 1);
+  --gn-transition-base: 250ms cubic-bezier(0.4, 0, 0.2, 1);
+  --gn-transition-slow: 400ms cubic-bezier(0.4, 0, 0.2, 1);
+
+  /* Spacing scale */
+  --gn-space-xs: 4px;
+  --gn-space-sm: 8px;
+  --gn-space-md: 16px;
+  --gn-space-lg: 24px;
+  --gn-space-xl: 32px;
+  --gn-space-2xl: 48px;
+  --gn-space-3xl: 64px;
+
+  /* Font */
+  --gn-font-sans: var(--font-outfit), system-ui, -apple-system, sans-serif;
+  --gn-font-mono: var(--font-geist-mono), ui-monospace, monospace;
+}
+
+/* ─── Tailwind v4 theme integration ─── */
+@theme inline {
+  --color-gn-bg-primary: var(--gn-bg-primary);
+  --color-gn-bg-secondary: var(--gn-bg-secondary);
+  --color-gn-bg-tertiary: var(--gn-bg-tertiary);
+  --color-gn-bg-card: var(--gn-bg-card);
+  --color-gn-bg-elevated: var(--gn-bg-elevated);
+
+  --color-gn-text-primary: var(--gn-text-primary);
+  --color-gn-text-secondary: var(--gn-text-secondary);
+  --color-gn-text-tertiary: var(--gn-text-tertiary);
+  --color-gn-text-muted: var(--gn-text-muted);
+  --color-gn-text-inverse: var(--gn-text-inverse);
+
+  --color-gn-accent-primary: var(--gn-accent-primary);
+  --color-gn-accent-primary-hover: var(--gn-accent-primary-hover);
+  --color-gn-accent-primary-subtle: var(--gn-accent-primary-subtle);
+  --color-gn-accent-secondary: var(--gn-accent-secondary);
+  --color-gn-accent-secondary-hover: var(--gn-accent-secondary-hover);
+  --color-gn-accent-secondary-subtle: var(--gn-accent-secondary-subtle);
+
+  --color-gn-success: var(--gn-success);
+  --color-gn-success-subtle: var(--gn-success-subtle);
+  --color-gn-warning: var(--gn-warning);
+  --color-gn-warning-subtle: var(--gn-warning-subtle);
+  --color-gn-error: var(--gn-error);
+  --color-gn-error-subtle: var(--gn-error-subtle);
+  --color-gn-info: var(--gn-info);
+  --color-gn-info-subtle: var(--gn-info-subtle);
+
+  --color-gn-border-default: var(--gn-border-default);
+  --color-gn-border-strong: var(--gn-border-strong);
+  --color-gn-border-focus: var(--gn-border-focus);
+
+  --shadow-gn-sm: var(--gn-shadow-sm);
+  --shadow-gn-md: var(--gn-shadow-md);
+  --shadow-gn-lg: var(--gn-shadow-lg);
+  --shadow-gn-xl: var(--gn-shadow-xl);
+
+  --radius-gn-sm: var(--gn-radius-sm);
+  --radius-gn-md: var(--gn-radius-md);
+  --radius-gn-lg: var(--gn-radius-lg);
+  --radius-gn-xl: var(--gn-radius-xl);
+  --radius-gn-full: var(--gn-radius-full);
+
+  --font-sans: var(--gn-font-sans);
+  --font-mono: var(--gn-font-mono);
+}
+
+/* ─── Base styles ─── */
+body {
+  background: var(--gn-bg-primary);
+  color: var(--gn-text-primary);
+  font-family: var(--gn-font-sans);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* ─── Focus ring utility ─── */
+.gn-focus-ring:focus-visible {
+  outline: 2px solid var(--gn-border-focus);
+  outline-offset: 2px;
+  border-radius: var(--gn-radius-sm);
+}
+
+/* ─── Smooth page transitions ─── */
+@media (prefers-reduced-motion: no-preference) {
+  html {
+    scroll-behavior: smooth;
+  }
+}
+
+/* ─── Skeleton loading animation ─── */
+@keyframes gn-shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+.gn-skeleton {
+  background: linear-gradient(
+    90deg,
+    var(--gn-bg-secondary) 25%,
+    var(--gn-bg-tertiary) 50%,
+    var(--gn-bg-secondary) 75%
+  );
+  background-size: 200% 100%;
+  animation: gn-shimmer 1.5s ease-in-out infinite;
+  border-radius: var(--gn-radius-sm);
+}
+
+/* ─── Fade-in animation ─── */
+@keyframes gn-fade-in {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.gn-fade-in {
+  animation: gn-fade-in var(--gn-transition-base) both;
+}
+
+/* ─── Subtle pulse for live indicators ─── */
+@keyframes gn-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+.gn-pulse {
+  animation: gn-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
