@@ -77,11 +77,53 @@ async function request<T>(
   return response.json();
 }
 
+export interface ApiResponse<T> {
+  ok: boolean;
+  status: number;
+  data?: T;
+  error?: string;
+}
+
 /** API client methods — thin wrappers over typed fetch. */
 export const api = {
   health: {
     check: () => request<HealthResponse>("/health"),
     readiness: () => request<ReadinessResponse>("/readiness"),
+  },
+  get: async <T>(path: string, options?: { params?: Record<string, string> }): Promise<ApiResponse<T>> => {
+    let url = path;
+    if (options?.params) {
+      const q = new URLSearchParams(options.params).toString();
+      if (q) url += `?${q}`;
+    }
+    try {
+      const fullUrl = `${config.apiUrl}${url}`;
+      const res = await fetch(fullUrl, { headers: { "Content-Type": "application/json" } });
+      if (!res.ok) {
+        return { ok: false, status: res.status, error: res.statusText };
+      }
+      const data = await res.json();
+      return { ok: true, status: res.status, data };
+    } catch (e: unknown) {
+      return { ok: false, status: 0, error: e instanceof Error ? e.message : "Network error" };
+    }
+  },
+  post: async <T>(path: string, body?: unknown): Promise<ApiResponse<T>> => {
+    try {
+      const fullUrl = `${config.apiUrl}${path}`;
+      const res = await fetch(fullUrl, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: body ? JSON.stringify(body) : undefined,
+      });
+      if (!res.ok) {
+        return { ok: false, status: res.status, error: res.statusText };
+      }
+      const data = await res.json();
+      return { ok: true, status: res.status, data };
+    } catch (e: unknown) {
+      return { ok: false, status: 0, error: e instanceof Error ? e.message : "Network error" };
+    }
   },
 };
 

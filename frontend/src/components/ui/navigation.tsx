@@ -19,7 +19,7 @@ const defaultNavItems: NavItem[] = [
   { label: "Men's Grooming", href: "#services" },
   { label: "Tailoring Studio", href: "#tailoring", badge: "POPULAR" },
   { label: "Verified Pros", href: "#professionals" },
-  { label: "Track Booking", href: "#track" },
+  { label: "Catalog Engine", href: "/admin/catalog", badge: "ADMIN" },
 ];
 
 export function Navigation({ items = defaultNavItems }: NavigationProps) {
