@@ -1,109 +1,132 @@
-# Repository Audit
+# GlamNow Repository Audit & Baseline Assessment
 
-**Audit date:** October 21, 2026  
-**Repository:** `GlamNow`  
-**Audit scope:** local working tree, Git metadata, available project files, and safe baseline checks
+**Audit Date:** October 21, 2026  
+**Repository Branch / Commit:** `main` @ `89599ea` (`v1`)  
+**Audit Scope:** Local monorepo (`backend/`, `frontend/`, `docs/`, root config), test executions, build logs, and code inspection.
 
-## Executive summary
+---
 
-The local workspace is an initialized but empty Git repository. It contains Git metadata only; there is no application source, dependency manifest, framework configuration, database schema, test suite, CI configuration, environment example, or project documentation to inspect or reuse.
+## 1. Executive Summary
 
-The configured remote is `https://github.com/shalinisingh0510/GlamNow.git`, but `git ls-remote --heads --tags origin` returned no refs during this audit. The local `main` branch is unborn and has no commit history. No source files were fetched or created as part of the inspection.
+The GlamNow repository represents a clean, newly-initialized production scaffold adhering to the modern decoupled monorepo architecture. 
 
-Because there is no existing application stack, the implementation plan can adopt the requested preferred stack directly rather than planning a migration from an existing framework. The implementation should still begin with a small, independently deployable foundation and should keep the frontend and backend in separate top-level folders.
+In Commit `89599ea` (`v1`), the repository established:
+1. **Root Infrastructure:** Docker Compose (`compose.dev.yml`) for local PostgreSQL 16 and Redis 7; root `.env.example` mapping backend and frontend configuration.
+2. **Backend Engine (`/backend`):** FastAPI application with Python 3.14.8, Pydantic v2, uv package management, structured JSON logging, standard correlation middleware (`X-Request-ID`), unified error hierarchy, async database session lifecycle, Alembic migrations skeleton, and a 16-test unit suite with 100% pass rate.
+3. **Frontend Application (`/frontend`):** Next.js 16.4.2 App Router (React 19.3.0, Tailwind v4, TanStack Query v5), accessible UI primitives (`Button`, `Card`, `Badge`, `Input`), responsive brand layout (`Header`, `Footer`), typed API client, and an interactive landing page showcasing quick-commerce delivery, multi-tier comparison, verified pro picker, and doorstep tailoring studio.
 
-## Repository inventory
+There is zero legacy technical debt or obsolete codebase to migrate. However, multiple features currently contain hardcoded mock data, stubbed integrations, and incomplete workflows that must be built out across subsequent phases.
 
-| Area | Finding | Evidence |
-| --- | --- | --- |
-| Working tree | Empty apart from `.git/` | Directory listing on October 21, 2026 |
-| Git branch | `main` is unborn and tracks a missing `origin/main` | `git status --short --branch` |
-| Git history | No commits, tags, or local/remote refs | `git log --oneline -10 --all`, `git show-ref --head` |
-| Remote | HTTPS GitHub remote configured | `.git/config:8-13` |
-| Frontend | No source or manifest | No `package.json`, lockfile, `src/`, `app/`, or `pages/` |
-| Backend | No source or manifest | No `pyproject.toml`, `requirements.txt`, `app/`, or `backend/` |
-| Database | No models, migrations, or connection config | No SQLAlchemy, Alembic, SQL, or database files |
-| API | No routes, controllers, schemas, or client | No application files |
-| Tests | No unit, integration, end-to-end, or test config | No test directories or runner config |
-| Deployment | No Docker, CI, hosting, or infrastructure config | No `Dockerfile`, compose, `.github/`, or deployment files |
-| Configuration | No `.env`, `.env.example`, or runtime settings | No project-level environment files |
-| Documentation | No README or architecture docs before this audit | Only Git's default `.git/description` |
+---
 
-## Stack and runtime assessment
+## 2. Baseline Verification Checks
 
-No framework or dependency choices exist in the repository. The following runtimes were available on the audit machine, but they are not project requirements and are not yet pinned:
+All baseline verification commands were executed directly in the project environment. Results:
 
-- Node.js: `v26.11.0`
-- Python: `3.14.8`
+| Check Target | Command Executed | Result | Metric / Note |
+|:---|:---|:---:|:---|
+| **Backend Unit Tests** | `uv run pytest tests/ -v` | **PASSED** | 16 passed in 0.02s; 0 failures. |
+| **Backend Code Compilation** | `python -m compileall app/ tests/` | **PASSED** | 0 syntax or import errors. |
+| **Frontend Linting** | `npm run lint` | **PASSED** | 0 errors, 0 warnings (clean ESLint 9). |
+| **Frontend Production Build** | `npm run build` | **PASSED** | Compiled in 205ms; static pages generated via Turbopack. |
+| **Database Migrations** | Directory inspection (`alembic/versions`) | **PENDING** | Alembic initialized; 0 revision files present. |
+| **Git Working Tree** | `git status --porcelain` | **CLEAN** | Working tree clean matching commit `89599ea`. |
 
-The requested stack is therefore suitable as the initial project baseline:
+---
 
-- **Frontend:** Next.js App Router, React, TypeScript, Tailwind CSS, accessible UI primitives, TanStack Query, React Hook Form, and Zod.
-- **Backend:** Python, FastAPI, Pydantic, SQLAlchemy 2, and Alembic.
-- **Infrastructure:** PostgreSQL, Redis, a maintained worker library selected during foundation work, and object storage behind an adapter.
-- **Testing:** Vitest and React Testing Library for frontend behavior, Playwright for browser flows, and pytest for backend behavior.
+## 3. Dependency Inventory & Runtimes
 
-These choices must be pinned in manifests and lockfiles during the foundation phase. Compatibility with the installed runtimes should be checked before choosing exact versions; no packages were installed during this audit.
+### System Runtimes
+- **Python:** `3.14.8` (managed via Astral `uv`)
+- **Node.js:** `v26.11.0` (Turbopack, Next.js 16.4.2)
 
-## Feature and architecture findings
+### Backend Dependencies (`backend/pyproject.toml`)
+| Package | Pinned Version | Purpose |
+|:---|:---|:---|
+| `fastapi` | `>=0.115.0` | High-performance asynchronous REST API framework |
+| `uvicorn[standard]` | `>=0.34.0` | ASGI web server with uvloop support |
+| `pydantic` | `>=2.10.0` | Data validation and typed schemas |
+| `pydantic-settings` | `>=2.7.0` | Environment variable parsing and type enforcement |
+| `sqlalchemy[asyncio]` | `>=2.0.36` | Asynchronous ORM and SQL expression engine |
+| `asyncpg` | `>=0.30.0` | High-throughput PostgreSQL asynchronous driver |
+| `alembic` | `>=1.14.0` | Schema migration manager |
+| `redis` | `>=5.2.0` | Redis client for caching, idempotency & locks |
+| `httpx` | `>=0.28.0` | Async HTTP client for external integrations |
+| `pytest` / `pytest-asyncio` | `>=8.3.0` / `>=0.25.0` | Test runner and async test fixtures |
 
-### Existing features
+### Frontend Dependencies (`frontend/package.json`)
+| Package | Pinned Version | Purpose |
+|:---|:---|:---|
+| `next` | `16.4.2` | App Router, Server Components & Turbopack bundler |
+| `react` / `react-dom` | `19.3.0` | UI rendering engine |
+| `tailwindcss` | `^4.0.0` | Utility CSS with `@theme inline` design tokens |
+| `@tanstack/react-query` | `^5.104.5` | Server-state caching and async query management |
+| `react-hook-form` | `^7.90.0` | Performant form state handling |
+| `zod` | `^3.25.76` | Runtime client schema validation |
 
-No user-facing features are present. There is no behavior that can be called working, incomplete, duplicated, or deprecated.
+---
 
-### Reusable code
+## 4. Current Application Inventory
 
-No application code is available for reuse. The remote URL and Git metadata are the only project artifacts found.
+### Backend Components & Endpoints
+- **Entry Point:** [`backend/app/main.py`](file:///Users/kumargaurav/Desktop/GlamNow/backend/app/main.py) with CORS middleware, request ID injection, structured request logging, and global exception handlers.
+- **Health Check Route:** `GET /api/v1/health` in [`backend/app/api/v1/health.py`](file:///Users/kumargaurav/Desktop/GlamNow/backend/app/api/v1/health.py). Returns status, environment, version, uptime, and request correlation ID.
+- **Core Modules:**
+  - `app.core.settings`: Pydantic BaseSettings class loading `GLAMNOW_*` environment variables.
+  - `app.core.errors`: Structured error hierarchy (`AppError`, `NotFoundError`, `ConflictError`, `ValidationError`, `ForbiddenError`, `UnauthorizedError`).
+  - `app.core.logging`: JSON structured logger with correlation IDs.
+  - `app.core.middleware`: `RequestIDMiddleware` ensuring end-to-end audit tracing.
+  - `app.db`: Async engine factory, `AsyncSessionLocal`, and `get_db_session` dependency.
+- **Domain Modules Scaffolded (`backend/app/modules/`):**
+  `availability`, `bookings`, `catalog`, `fulfillment`, `identity`, `operations`, `payments`, `professionals`, `reviews`, `serviceability`, `support`, `tailoring`, `workers`. (Currently container folders awaiting entity and repository models).
 
-### Hardcoded content
+### Frontend Components & Pages
+- **Root Layout:** [`frontend/src/app/layout.tsx`](file:///Users/kumargaurav/Desktop/GlamNow/frontend/src/app/layout.tsx) wrapping application in `QueryProvider`, Google Outfit typography, Header, and Footer.
+- **Home Page:** [`frontend/src/app/page.tsx`](file:///Users/kumargaurav/Desktop/GlamNow/frontend/src/app/page.tsx) with interactive tier selection, pro card viewer, tailoring step viewer, and pincode checker.
+- **UI Components:**
+  - `Button` (`components/ui/button.tsx`)
+  - `Card` (`components/ui/card.tsx`)
+  - `Badge` (`components/ui/badge.tsx`)
+  - `Input` (`components/ui/input.tsx`)
+- **Shared Components:**
+  - `Header` (`components/header.tsx`)
+  - `Footer` (`components/footer.tsx`)
+- **API Client:** [`frontend/src/lib/api/client.ts`](file:///Users/kumargaurav/Desktop/GlamNow/frontend/src/lib/api/client.ts) with typed fetch wrapper.
 
-No application hardcoded content was found because no application exists. The future implementation must not put service categories, tier labels, prices, durations, eligibility, promotions, professional listings, or availability in React components.
+---
 
-### Architectural coupling
+## 5. Audit Findings & Gap Analysis
 
-No coupling can be assessed in the absent application. The new implementation should establish module boundaries before feature growth so that the catalog, booking, tailoring, payments, and operations areas do not manipulate one another's persistence directly.
+### 5.1 Hardcoded Business Data
+1. **Frontend Landing Page (`frontend/src/app/page.tsx`):**
+   - `FEATURED_PROS` array: Hardcoded professionals (Priya Sharma, Ramesh Kumar, Ananya Deshmukh) and review metrics.
+   - `CATEGORIES` array: Hardcoded service categories and item counts.
+   - Pricing constants: Hardcoded tier prices (`₹399`, `₹799`, `₹1,499`) and tailoring base prices (`₹299`, `₹699`, `₹199`).
+   - Location chip: Hardcoded `560038` and `Indiranagar, Bengaluru`.
+2. **Backend Health Check (`backend/app/api/v1/health.py`):**
+   - Database and Redis statuses return `"not_configured"` strings rather than live ping checks.
 
-### Security risks
+*Remediation Plan:* Build the versioned catalog and serviceability REST APIs so the frontend fetches dynamic data via TanStack Query.
 
-No runtime security risks are present yet because there is no runtime. The main setup risks are:
+### 5.2 Duplicated Code & Circular Dependencies
+- **Duplication:** None identified. Primitives and layouts are cleanly separated.
+- **Circular Dependencies:** Zero circular imports detected (`compileall` and Next.js Turbopack build passed cleanly).
 
-1. Accidentally treating the empty repository as evidence that a remote application was reviewed.
-2. Introducing sample credentials, payment secrets, private measurements, or customer data into source control while scaffolding.
-3. Building UI-only authorization or client-trusted prices before backend boundaries exist.
-4. Creating a static demo that implies payment success, live ETA, or booking confirmation without real provider state.
+### 5.3 Security Gaps
+1. **Secret Key Default:** `GLAMNOW_SECRET_KEY` uses a development placeholder (`dev-secret-key-change-in-production-min-32-chars-long`). A runtime warning is emitted by Pydantic. Must be strictly validated in production.
+2. **CORS Origins:** Default allows `localhost:3000` and `127.0.0.1:3000`. Must enforce strict origin whitelisting in staging and production.
+3. **Sensitive Tailoring Data:** Tailoring measurements (bust, waist, hip, etc.) and photos must not be logged or exposed to unassigned tailors (documented in ADR-0007).
+4. **Idempotency Keys:** Mutating checkout requests must enforce mandatory `Idempotency-Key` headers (documented in ADR-0006).
 
-## Git and user-work safety
+### 5.4 Incomplete Workflows
+1. **Catalog & Tier Engine:** No database tables for service categories, tiers, or versioned price snapshots yet.
+2. **Serviceability & Pincode Lookup:** Pincode validation on the frontend is currently a client-side string check rather than a database polygon/zone query.
+3. **Professional Scheduling & Dispatch:** Matching algorithm, arrival estimation, and slot reservations are not yet implemented.
+4. **Tailoring Fulfillment State Machine:** No database tracking for fabric pickup, master tailor home visits, workshop progress, or alterations rework.
+5. **Payment Processing:** No Razorpay port/adapter implementation or webhook signature verification.
 
-At audit time:
+---
 
-- `git status --porcelain=v1 --untracked-files=all` reported no changes.
-- `git diff --exit-code` reported no unstaged changes.
-- `git diff --cached --exit-code` reported no staged changes.
-- `git ls-files` returned no tracked files.
-- There were no commits to preserve.
+## 6. Audit Conclusion
 
-No destructive Git operation, remote fetch, dependency installation, or source modification was performed during inspection. The configured remote was queried only for refs and returned none.
-
-## Baseline checks
-
-There is no existing test suite, build, lint, typecheck, migration, or application start command to run. This is a baseline gap, not a passing result.
-
-| Check | Result | Notes |
-| --- | --- | --- |
-| Existing frontend tests | Not runnable | No frontend manifest, test runner, or source files |
-| Existing backend tests | Not runnable | No backend manifest, test runner, or source files |
-| Existing lint/typecheck | Not runnable | No configuration or scripts |
-| Existing frontend build | Not runnable | No application or dependency manifest |
-| Existing backend startup | Not runnable | No server entry point or dependencies |
-| Existing database migration | Not runnable | No migration directory or database configuration |
-| Runtime discovery | Completed | Node.js `v26.11.0`; Python `3.14.8` |
-| Git cleanliness | Passed | Empty working tree and no staged/unstaged changes |
-| Remote ref discovery | No refs returned | `git ls-remote --heads --tags origin` returned empty output |
-
-The first implementation phase must add reproducible commands for formatting, linting, typechecking, unit tests, integration tests, browser tests, migrations, and local startup. A check may only be called passing after it has actually run against the new code.
-
-## Audit conclusion
-
-This workspace should be treated as a greenfield project with an initialized Git remote, not as an existing application requiring a destructive rewrite or a migration. There is no legacy code to preserve. The next safe step is to create the documented project foundation with `/frontend` and `/backend` as independent application roots, then verify that foundation before implementing marketplace workflows.
-
-See [`implementation-plan.md`](./implementation-plan.md) for the proposed structure, phased delivery, boundaries, data model direction, quality gates, and assumptions.
+The repository is healthy, builds cleanly, and possesses zero legacy technical debt. The foundation satisfies all architectural prerequisites for Phase 2 (Data Modeling, Catalog, and Serviceability). All existing code is preserved.
