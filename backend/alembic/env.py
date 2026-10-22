@@ -20,6 +20,7 @@ from app.db import Base
 # Import all ORM models to register with Base.metadata
 import app.modules.catalog.models  # noqa: F401
 import app.modules.identity.models  # noqa: F401
+import app.modules.professionals.models  # noqa: F401
 
 # Alembic Config object
 config = context.config

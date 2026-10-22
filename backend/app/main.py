@@ -82,10 +82,12 @@ def create_app() -> FastAPI:
     from app.api.v1.auth import router as auth_router
     from app.api.v1.catalog import router as catalog_router
     from app.api.v1.health import router as health_router
+    from app.api.v1.professionals import router as professionals_router
 
     app.include_router(health_router, prefix=settings.api_prefix)
     app.include_router(auth_router, prefix=settings.api_prefix)
     app.include_router(catalog_router, prefix=settings.api_prefix)
+    app.include_router(professionals_router, prefix=settings.api_prefix)
 
     return app
 
