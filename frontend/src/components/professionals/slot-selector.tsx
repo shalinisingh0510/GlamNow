@@ -25,35 +25,32 @@ export interface SlotSelectorProps {
   onSlotReserved?: (slot: SlotItem) => void;
 }
 
+function getInitialDays(): DayItem[] {
+  const base = typeof window === "undefined" ? new Date("2026-10-22T00:00:00Z") : new Date();
+  return Array.from({ length: 5 }, (_, i) => {
+    const d = new Date(base);
+    d.setDate(base.getDate() + i);
+    return {
+      dateObj: d,
+      dateString: d.toISOString().split("T")[0],
+      dayName: i === 0 ? "Today" : i === 1 ? "Tomorrow" : d.toLocaleDateString("en-IN", { weekday: "short" }),
+      formattedDate: d.toLocaleDateString("en-IN", { month: "short", day: "numeric" }),
+    };
+  });
+}
+
 export function SlotSelector({
   professionalId,
   professionalName,
   onSlotReserved,
 }: SlotSelectorProps) {
-  const [days, setDays] = useState<DayItem[]>([]);
-  const [selectedDate, setSelectedDate] = useState<string>("");
+  const [days] = useState<DayItem[]>(getInitialDays);
+  const [selectedDate, setSelectedDate] = useState<string>(() => days[0]?.dateString ?? "");
   const [selectedSlot, setSelectedSlot] = useState<SlotItem | null>(null);
   const [isHolding, setIsHolding] = useState(false);
   const [heldSlot, setHeldSlot] = useState<SlotItem | null>(null);
   const [holdSecondsLeft, setHoldSecondsLeft] = useState<number>(0);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
-
-  // Initialize dates client-side only to ensure deterministic SSR prerendering
-  useEffect(() => {
-    const today = new Date();
-    const generated = Array.from({ length: 5 }, (_, i) => {
-      const d = new Date(today);
-      d.setDate(today.getDate() + i);
-      return {
-        dateObj: d,
-        dateString: d.toISOString().split("T")[0],
-        dayName: i === 0 ? "Today" : i === 1 ? "Tomorrow" : d.toLocaleDateString("en-IN", { weekday: "short" }),
-        formattedDate: d.toLocaleDateString("en-IN", { month: "short", day: "numeric" }),
-      };
-    });
-    setDays(generated);
-    setSelectedDate(generated[0].dateString);
-  }, []);
 
   // Compute slots cleanly using useMemo without cascading render setState effects
   const slots = useMemo<SlotItem[]>(() => {

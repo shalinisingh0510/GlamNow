@@ -22,6 +22,7 @@ import {
 } from "@/lib/fixtures";
 import { useCategories, useServices, useCalculateQuote } from "@/features/catalog/hooks";
 import type { QuoteResponseDto, ServiceSummaryDto } from "@/features/catalog/api";
+import { BookingModal } from "@/features/booking/booking-modal";
 
 function buildFallbackQuote(
   service: ServiceSummaryDto,
@@ -97,6 +98,20 @@ export default function HomePage() {
   const [mobileCartSheetOpen, setMobileCartSheetOpen] = useState(false);
   const [cartCount, setCartCount] = useState(2);
   const [bagNotice, setBagNotice] = useState<string | null>(null);
+
+  const [bookingModalOpen, setBookingModalOpen] = useState(false);
+  const [bookingModalService, setBookingModalService] = useState<ServiceSummaryDto | null>(null);
+
+  const handleOpenBooking = (
+    service: ServiceSummaryDto,
+    tier: "basic" | "standard" | "premium" = "standard"
+  ) => {
+    setBookingModalService(service);
+    setActiveTier(tier);
+    setBookingModalOpen(true);
+    setTierModalService(null);
+    setMobileCartSheetOpen(false);
+  };
 
   const handleCheckServiceability = (e: React.FormEvent) => {
     e.preventDefault();
@@ -884,7 +899,7 @@ export default function HomePage() {
                 Close
               </Button>
               <Button
-                variant="primary"
+                variant="outline"
                 size="sm"
                 onClick={() => {
                   const title = `${tierModalService.name} (${activeTier.toUpperCase()})`;
@@ -892,12 +907,29 @@ export default function HomePage() {
                   setTierModalService(null);
                 }}
               >
-                Confirm &amp; Add to Bag
+                Add to Bag
+              </Button>
+              <Button
+                variant="primary"
+                size="sm"
+                onClick={() => {
+                  handleOpenBooking(tierModalService, activeTier);
+                }}
+              >
+                ⚡ Instant Book &amp; Dispatch
               </Button>
             </div>
           </div>
         </Dialog>
       )}
+
+      {/* ─── Customer Journey Booking Checkout Modal ─── */}
+      <BookingModal
+        isOpen={bookingModalOpen}
+        onClose={() => setBookingModalOpen(false)}
+        service={bookingModalService}
+        initialTier={activeTier}
+      />
 
       {/* ─── Mobile Cart / Service Bag BottomSheet ─── */}
       <BottomSheet
@@ -916,11 +948,14 @@ export default function HomePage() {
               size="lg"
               className="w-full"
               onClick={() => {
-                alert("Proceeding to checkout with idempotent hold.");
-                setMobileCartSheetOpen(false);
+                const srv =
+                  tierModalService ||
+                  (serverServices?.[0] as ServiceSummaryDto) ||
+                  (FIXTURE_SERVICES[0] as unknown as ServiceSummaryDto);
+                handleOpenBooking(srv, "standard");
               }}
             >
-              Proceed to Booking Hold
+              Proceed to Booking Checkout &amp; Hold
             </Button>
           </div>
         }
